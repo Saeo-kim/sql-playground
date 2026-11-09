@@ -1,0 +1,317 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Prison | SQL Playground</title>
+
+    <link rel="stylesheet" href="/css/playground.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #1b1712;
+            color: #fbf5e6;
+            font-family: Arial, sans-serif;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: auto;
+            padding: 55px 24px;
+        }
+
+        .eyebrow {
+            color: #c6f432;
+            letter-spacing: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: clamp(38px, 7vw, 68px);
+            margin: 18px 0;
+        }
+
+        .intro {
+            color: #cdc4b3;
+            line-height: 1.8;
+            max-width: 620px;
+        }
+
+        .notice {
+            margin: 30px 0;
+            padding: 18px;
+            background: #2c261d;
+            border-left: 4px solid #c6f432;
+            border-radius: 8px;
+            color: #f3ead6;
+        }
+
+        .prison-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 35px;
+        }
+
+        .cell {
+            text-align: left;
+            padding: 24px;
+            border: 1px solid #4a4133;
+            border-radius: 16px;
+            background: #26211a;
+            color: #fbf5e6;
+            cursor: pointer;
+            transition: 0.2s;
+            font: inherit;
+        }
+
+        .cell:hover {
+            transform: translateY(-4px);
+            border-color: #c6f432;
+            background: #352d21;
+        }
+
+        .emoji {
+            font-size: 32px;
+        }
+
+        .cell h2 {
+            font-size: 19px;
+            margin: 15px 0 8px;
+        }
+
+        .cell p {
+            color: #cdc4b3;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .tag {
+            color: #ffe66b;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .details {
+            margin-top: 28px;
+            padding: 28px;
+            background: #2c261d;
+            border: 1px solid #5c5140;
+            border-radius: 16px;
+            line-height: 1.8;
+        }
+
+        .details h2 {
+            margin-top: 0;
+        }
+
+        .details button {
+            background: #c6f432;
+            color: #211c17;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        footer {
+            padding: 30px;
+            text-align: center;
+            color: #a89e8c;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                padding: 35px 18px;
+            }
+
+            .prison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header th:replace="~{fragments/site-header :: siteHeader(false)}"></header>
+
+<main>
+    <p class="eyebrow">CONFIDENTIAL DATABASE ARCHIVE</p>
+
+    <h1>Welcome to<br>SQL Prison.</h1>
+
+    <p class="intro">
+        Every table has a secret.
+        Every row has a record.
+        And someone, somewhere, has probably violated
+        the database rules.
+    </p>
+
+    <div class="notice">
+        ⚠ Warden's Notice: No data monster may leave
+        its assigned table without proper authorization.
+    </div>
+
+    <h2>Choose Your Destination</h2>
+
+    <div class="prison-grid">
+
+        <button class="cell" onclick="openRoom('prisons')">
+            <span class="emoji">🏰</span>
+            <div class="tag">AREA 01</div>
+            <h2>The Prison Blocks</h2>
+            <p>Explore tables, records, columns, and
+                suspicious relationships between them.</p>
+        </button>
+
+        <button class="cell" onclick="openRoom('monsters')">
+            <span class="emoji">👾</span>
+            <div class="tag">AREA 02</div>
+            <h2>Monster Files</h2>
+            <p>Meet NULL, duplicate twins, orphan records,
+                and other database troublemakers.</p>
+        </button>
+
+        <button class="cell" onclick="openRoom('curators')">
+            <span class="emoji">🧐</span>
+            <div class="tag">AREA 03</div>
+            <h2>The Curator's Office</h2>
+            <p>Meet the suspiciously strict staff
+                responsible for keeping order.</p>
+        </button>
+
+        <button class="cell" onclick="openRoom('incidents')">
+            <span class="emoji">🕵️</span>
+            <div class="tag">AREA 04</div>
+            <h2>Incident Reports</h2>
+            <p>Investigate strange cases involving JOIN,
+                missing records, and duplicate data.</p>
+        </button>
+
+        <button class="cell" onclick="openRoom('escape')">
+            <span class="emoji">🔓</span>
+            <div class="tag">AREA 05</div>
+            <h2>Escape Simulator</h2>
+            <p>Make decisions, manipulate data,
+                and see what happens next.</p>
+        </button>
+
+    </div>
+
+    <section class="details" id="details">
+        <h2>📁 Your First Assignment</h2>
+        <p>
+            The prison is open. The monsters are restless.
+            Select an area above to begin your investigation.
+        </p>
+    </section>
+</main>
+
+<footer>
+    SQL PLAYGROUND · SIDE STORIES · ALL RECORDS ARE SUSPICIOUS
+</footer>
+
+<script>
+    const rooms = {
+        prisons: {
+            title: "🏰 The Prison Blocks",
+            text: "A database table is like a prison block. " +
+                "Each row stores one record, and each column " +
+                "stores a particular attribute.",
+            task: "Can you identify a row and a column " +
+                "in a sample table?"
+        },
+
+        monsters: {
+            title: "👾 Monster Files",
+            text: "NULL refuses to reveal its information. " +
+                "Duplicate Twins keep appearing under " +
+                "different record numbers. Orphan Records " +
+                "cannot find a matching parent.",
+            task: "Your first target: discover why NULL " +
+                "cannot be checked with ordinary equality."
+        },
+
+        curators: {
+            title: "🧐 The Curator's Office",
+            text: "The curators enforce database rules. " +
+                "The Primary Key Inspector hates duplicate " +
+                "identities. The JOIN Investigator asks " +
+                "far too many questions.",
+            task: "Meet the inspectors and learn what " +
+                "rules they enforce."
+        },
+
+        incidents: {
+            title: "🕵️ Incident Reports",
+            text: "CASE 001: Two prison blocks were connected. " +
+                "Suddenly, several monsters appeared twice. " +
+                "Was it a faulty JOIN, or was the data " +
+                "already suspicious?",
+            task: "Investigate the tables before accusing " +
+                "the JOIN Investigator."
+        },
+
+        escape: {
+            title: "🔓 Escape Simulator",
+            text: "A monster wants to escape its table. " +
+                "You must inspect its record, find its " +
+                "relationships, and decide what to do.",
+            task: "Choose your next action carefully. " +
+                "Every database operation has consequences."
+        }
+    };
+
+    function openRoom(roomName) {
+        const room = rooms[roomName];
+        const details = document.getElementById("details");
+
+        details.innerHTML = `
+            <h2>${room.title}</h2>
+            <p>${room.text}</p>
+            <p><strong>YOUR TASK:</strong> ${room.task}</p>
+            <button onclick="resetRoom()">Back to the briefing</button>
+        `;
+
+        details.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
+    }
+
+    function resetRoom() {
+        document.getElementById("details").innerHTML = `
+            <h2>📁 Your First Assignment</h2>
+            <p>
+                The prison is open. The monsters are restless.
+                Select an area above to begin your investigation.
+            </p>
+        `;
+    }
+
+    // Lets the home page and site search open a room directly, e.g. /prison#monsters.
+    function openRoomFromHash() {
+        const roomName = location.hash.slice(1);
+
+        if (Object.hasOwn(rooms, roomName)) {
+            openRoom(roomName);
+        }
+    }
+
+    window.addEventListener("hashchange", openRoomFromHash);
+    openRoomFromHash();
+</script>
+
+<script src="/js/playground.js"></script>
+</body>
+</html>

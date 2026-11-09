@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>About SQL Playground</title>
+
+    <link rel="stylesheet" href="/css/playground.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #fbf5e6;
+            color: #211c17;
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+        }
+
+        /* Main layout */
+        .container {
+            width: min(100% - 40px, 900px);
+            margin: 0 auto;
+            padding: 70px 0;
+        }
+
+        .eyebrow {
+            color: #c2105f;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 16px 0;
+            font-size: clamp(36px, 6vw, 58px);
+            line-height: 1.2;
+            letter-spacing: -1.5px;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 25px;
+        }
+
+        p {
+            color: #6b6358;
+        }
+
+        .hero {
+            padding-bottom: 50px;
+        }
+
+        .hero-description {
+            max-width: 650px;
+            font-size: 18px;
+        }
+
+        .section {
+            margin-top: 28px;
+            padding: 32px;
+            background: #ffffff;
+            border: 1px solid #e8dfca;
+            border-radius: 18px;
+        }
+
+        .principles {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .principle {
+            padding: 20px;
+            background: #fff6c4;
+            border-radius: 12px;
+        }
+
+        .principle h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 17px;
+        }
+
+        .principle p {
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+
+        .closing {
+            margin-top: 40px;
+            padding: 28px 0;
+            text-align: center;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #c2105f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer {
+            padding: 25px;
+            text-align: center;
+            color: #6b6358;
+            border-top: 1px solid #e8dfca;
+            font-size: 13px;
+        }
+
+        /* Mobile layout */
+        @media (max-width: 600px) {
+            .container {
+                padding-top: 40px;
+                padding-bottom: 40px;
+            }
+
+            .section {
+                padding: 22px;
+            }
+
+            .principles {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header th:replace="~{fragments/site-header :: siteHeader(false)}"></header>
+
+<!-- Main content -->
+<main class="container">
+
+    <!-- Hero section -->
+    <section class="hero">
+        <p class="eyebrow">ABOUT SQL PLAYGROUND</p>
+
+        <h1>
+            Learn by questioning.<br>
+            Grow by understanding.
+        </h1>
+
+        <p class="hero-description">
+            A personal learning laboratory for exploring SQL,
+            building knowledge, and discovering how we learn.
+        </p>
+    </section>
+
+    <!-- About the lab -->
+    <section class="section">
+        <p class="eyebrow">01 / OUR MISSION</p>
+
+        <h2>What is SQL Playground?</h2>
+
+        <p>
+            SQL Playground is a personal learning space created to explore
+            SQL beyond memorization and exam preparation.
+        </p>
+
+        <p>
+            We learn by asking questions, visualizing concepts,
+            experimenting with ideas, and documenting discoveries.
+            Every small discovery becomes part of a growing
+            personal knowledge base.
+        </p>
+    </section>
+
+    <!-- Personal motivation -->
+    <section class="section">
+        <p class="eyebrow">02 / MY STORY</p>
+
+        <h2>Why I Learn SQL</h2>
+
+        <p>
+            I have always been drawn to learning foreign languages.
+            For me, learning a language is a way to approach
+            a world I have not yet understood.
+        </p>
+
+        <p>
+            But wanting to understand people and wanting to
+            constantly communicate with people are not necessarily
+            the same thing.
+        </p>
+
+        <p>
+            SQL offers me another way to explore a world:
+            the world of data. It allows me to ask questions,
+            express conditions, examine results, and refine my
+            thinking through logic and experimentation.
+        </p>
+
+        <p>
+            SQL cannot replace human connection, but it gives me
+            another language through which I can explore,
+            understand, and create without relying entirely
+            on conversation.
+        </p>
+
+        <p>
+            The SQLD certification is my starting point.
+            What I ultimately want to gain is the ability
+            to ask meaningful questions, understand the answers,
+            and use what I learn to build something of my own.
+        </p>
+    </section>
+
+    <!-- Learning philosophy -->
+    <section class="section">
+        <p class="eyebrow">03 / OUR APPROACH</p>
+
+        <h2>How We Learn</h2>
+
+        <p>
+            Learning is not just about collecting correct answers.
+            It is about building understanding through repeated
+            questions, experiments, and reflection.
+        </p>
+
+        <div class="principles">
+
+            <div class="principle">
+                <h3>Explore</h3>
+                <p>Discover questions and explore unfamiliar concepts.</p>
+            </div>
+
+            <div class="principle">
+                <h3>Visualize</h3>
+                <p>Make abstract ideas easier to see and understand.</p>
+            </div>
+
+            <div class="principle">
+                <h3>Experiment</h3>
+                <p>Test ideas and observe how SQL works in practice.</p>
+            </div>
+
+            <div class="principle">
+                <h3>Document</h3>
+                <p>Record discoveries in your own words.</p>
+            </div>
+
+            <div class="principle">
+                <h3>Connect</h3>
+                <p>Connect new ideas with knowledge you already have.</p>
+            </div>
+
+            <div class="principle">
+                <h3>Evolve</h3>
+                <p>Refine your understanding as you keep learning.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Vision -->
+    <section class="section">
+        <p class="eyebrow">04 / OUR VISION</p>
+
+        <h2>More Than a Certification</h2>
+
+        <p>
+            SQL Playground begins with a certification goal,
+            but it is designed to grow beyond an exam.
+        </p>
+
+        <p>
+            It is a space for developing independent learning
+            habits, building a personal knowledge system,
+            and turning curiosity into practical understanding.
+        </p>
+
+        <p>
+            The learner is always at the center.
+            Tools and AI can support the process, but the questions,
+            discoveries, and understanding belong to the learner.
+        </p>
+    </section>
+
+    <!-- Closing -->
+    <section class="closing">
+        <h2>Small questions. Lasting knowledge.</h2>
+
+        <p>
+            Every question is an opportunity to understand
+            something a little better.
+        </p>
+
+        <a class="back-link" href="/">Return to SQL Playground →</a>
+    </section>
+
+</main>
+
+<footer>
+    SQL Playground · A personal learning laboratory
+</footer>
+
+<script src="/js/playground.js"></script>
+</body>
+</html>

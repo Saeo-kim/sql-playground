@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest 01 | SQL Playground</title>
+
+    <link rel="stylesheet" href="/css/playground.css">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #fbf5e6;
+            color: #211c17;
+            font-family: Arial, sans-serif;
+        }
+
+        a {
+            color: #c2105f;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 42px 22px;
+        }
+
+        .tag {
+            color: #c2105f;
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        h1 { line-height: 1.3; }
+
+        .muted {
+            color: #6b6358;
+            line-height: 1.8;
+        }
+
+        .panel {
+            margin-top: 25px;
+            padding: 26px;
+            border: 1px solid #e8dfca;
+            border-radius: 20px;
+            background: white;
+        }
+
+        table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e8dfca;
+            text-align: left;
+        }
+
+        th {
+            background: #ffe66b;
+            color: #211c17;
+        }
+
+        .choice {
+            display: block;
+            margin: 12px 0;
+            padding: 15px;
+            border: 1px solid #e8dfca;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .choice:has(input:checked) {
+            border-color: #c2105f;
+            background: #fff6c4;
+        }
+
+        input { margin-right: 9px; }
+
+        button {
+            padding: 13px 19px;
+            border: 0;
+            border-radius: 11px;
+            background: #ff2e93;
+            color: #211c17;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+
+<body>
+<header th:replace="~{fragments/site-header :: siteHeader(false)}"></header>
+
+<main>
+    <div class="tag">SQL DETECTIVE · QUEST 01</div>
+    <h1 id="title">The Missing Sales Report</h1>
+
+    <p class="muted" id="story">
+        A store owner wants to know the total purchase amount
+        for each customer. Help solve the mystery!
+    </p>
+
+    <section class="panel">
+        <h2 id="dataTitle">Order Data</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>customer</th>
+                <th>category</th>
+                <th>amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr><td>Mina</td><td>Book</td><td>12000</td></tr>
+            <tr><td>Joon</td><td>Food</td><td>8000</td></tr>
+            <tr><td>Mina</td><td>Food</td><td>5000</td></tr>
+            <tr><td>Joon</td><td>Book</td><td>15000</td></tr>
+            </tbody>
+        </table>
+
+        <h3 id="question">
+            Which column should we group by to calculate
+            each customer's total spending?
+        </h3>
+
+        <form id="quizForm">
+            <label class="choice">
+                <input type="radio" name="answer" value="A">
+                <span id="optionA">A. amount</span>
+            </label>
+
+            <label class="choice">
+                <input type="radio" name="answer" value="B">
+                <span id="optionB">B. customer</span>
+            </label>
+
+            <label class="choice">
+                <input type="radio" name="answer" value="C">
+                <span id="optionC">C. category</span>
+            </label>
+
+            <button type="submit" id="submitButton">
+                Check my answer
+            </button>
+        </form>
+
+        <div id="feedback" aria-live="polite"></div>
+    </section>
+
+    <a class="back" href="/" id="backLink">← Back to my lab</a>
+</main>
+
+
+<script>
+    const form = document.getElementById("quizForm");
+    const feedback = document.getElementById("feedback");
+    const submitButton = document.getElementById("submitButton");
+
+    form.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const selected = form.querySelector(
+            'input[name="answer"]:checked'
+        );
+
+        if (!selected) {
+            feedback.textContent =
+                "Choose an answer first. Take your time!";
+            return;
+        }
+
+        if (selected.value === "B") {
+            feedback.innerHTML = `
+                <strong>Correct! You solved the mystery. 🎉</strong>
+                <p>GROUP BY customer groups orders by customer.</p>
+                <p>Mina: 12,000 + 5,000 = 17,000</p>
+                <p>Joon: 8,000 + 15,000 = 23,000</p>
+                <p><strong>Key idea:</strong> GROUP BY groups rows,
+                while SUM(amount) adds the amounts in each group.</p>
+            `;
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Quest completed!";
+        } else {
+            feedback.innerHTML = `
+                <strong>Not quite. That's okay! 🌱</strong>
+                <p>The owner wants one total for Mina and one for Joon.</p>
+                <p>Which column tells us who made each purchase?</p>
+                <p>Try again. You can solve this!</p>
+            `;
+        }
+    });
+</script>
+
+<script src="/js/playground.js"></script>
+</body>
+</html>

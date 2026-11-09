@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Shared site header. showLanguage is true only on pages that translate their text. -->
+<header class="pg-header" th:fragment="siteHeader(showLanguage)">
+    <a class="pg-logo" href="/" aria-label="SQL Playground home">
+        <svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">
+            <ellipse cx="16" cy="7.5" rx="12" ry="5" fill="#ff2e93"/>
+            <path d="M4 7.5v17c0 2.8 5.4 5 12 5s12-2.2 12-5v-17" fill="#c6f432"/>
+            <ellipse cx="16" cy="7.5" rx="12" ry="5" fill="#ff2e93" stroke="#211c17" stroke-width="3.2"/>
+            <path d="M4 7.5v17c0 2.8 5.4 5 12 5s12-2.2 12-5v-17M4 16c0 2.8 5.4 5 12 5s12-2.2 12-5"
+                  fill="none" stroke="#211c17" stroke-width="3.2" stroke-linecap="round"/>
+        </svg>
+    </a>
+
+    <nav class="pg-nav" aria-label="Main">
+        <a href="/" id="navHome">Home</a>
+        <a href="/knowledge" id="navKnowledge">My Knowledge Base</a>
+        <a href="/quests/first" id="navQuest">Quest</a>
+        <a href="/study-canvas" id="navTutor">AI Tutor</a>
+        <a href="/about" id="navAbout">About</a>
+    </nav>
+
+    <div class="pg-tools">
+        <form class="pg-search" role="search" id="siteSearchForm">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="3"/>
+                <path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <input id="siteSearch" type="search" autocomplete="off"
+                   placeholder="Search lessons" aria-label="Search lessons and pages"
+                   aria-controls="siteSearchResults">
+            <ul class="pg-search-results" id="siteSearchResults" hidden></ul>
+        </form>
+
+        <button class="pg-language" id="languageButton" type="button"
+                th:if="${showLanguage}" onclick="toggleLanguage()">한국어</button>
+
+        <a class="pg-account" href="/knowledge" aria-label="My account: open My Knowledge Base">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <circle cx="12" cy="8" r="4.2" fill="none" stroke="currentColor" stroke-width="3"/>
+                <path d="M4 21c.8-4.4 4-6.6 8-6.6s7.2 2.2 8 6.6" fill="none"
+                      stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+        </a>
+    </div>
+</header>
+
+</body>
+</html>

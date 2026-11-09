@@ -1,0 +1,464 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Knowledge Base | SQL Playground</title>
+
+    <link rel="stylesheet" href="/css/playground.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #fbf5e6;
+            color: #211c17;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .back-link {
+            color: #c2105f;
+            text-decoration: none;
+        }
+
+        .subtitle {
+            color: #6b6358;
+            line-height: 1.7;
+        }
+
+        .card {
+            margin-top: 28px;
+            padding: 28px;
+            background: #ffffff;
+            border: 1px solid #e8dfca;
+            border-radius: 18px;
+        }
+
+        label {
+            display: block;
+            margin: 20px 0 8px;
+            font-weight: bold;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d9ceb4;
+            border-radius: 9px;
+            font: inherit;
+            background: #fff;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 24px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #ff2e93;
+            color: #211c17;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .notice {
+            margin-top: 16px;
+            color: #4f7a00;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+<header th:replace="~{fragments/site-header :: siteHeader(false)}"></header>
+<div class="container">
+
+    <a class="back-link" href="/">← Back to SQL Playground</a>
+
+    <h1>My Knowledge Base</h1>
+
+    <p class="subtitle">
+        Collect what you learn. Rewrite what you understand.
+        Let your knowledge grow over time.
+    </p>
+
+    <div class="card">
+        <h2>Create a knowledge note</h2>
+
+        <p class="subtitle">
+            Start small. One concept or one new discovery is enough.
+        </p>
+
+        <form id="knowledgeForm">
+
+            <label for="title">Concept name</label>
+            <input
+                    id="title"
+                    name="title"
+                    placeholder="e.g. GROUP BY"
+                    required
+            >
+
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="Basic SQL">Basic SQL</option>
+                <option value="Aggregation">Aggregation</option>
+                <option value="JOIN">JOIN</option>
+                <option value="Subquery">Subquery</option>
+                <option value="Window Functions">Window Functions</option>
+                <option value="Database Design">Database Design</option>
+                <option value="My Discoveries">My Discoveries</option>
+            </select>
+
+            <label for="principle">Core idea</label>
+            <textarea
+                    id="principle"
+                    name="principle"
+                    placeholder="What is the main idea?"
+            ></textarea>
+
+            <label for="myUnderstanding">Explain it in my own words</label>
+            <textarea
+                    id="myUnderstanding"
+                    name="myUnderstanding"
+                    placeholder="How would I explain this to myself?"
+            ></textarea>
+
+            <label for="example">Example SQL</label>
+            <textarea
+                    id="example"
+                    name="example"
+                    placeholder="SELECT ... FROM ..."
+            ></textarea>
+
+            <label for="confusion">What still confuses me?</label>
+            <textarea
+                    id="confusion"
+                    name="confusion"
+                    placeholder="What do I need to investigate?"
+            ></textarea>
+
+            <button type="submit">Preview my note</button>
+
+            <button type="button" id="saveNoteButton">
+                Save my note
+            </button>
+
+            <p id="notice" class="notice" aria-live="polite"></p>
+
+        </form>
+    </div>
+
+    <div id="preview" class="card" hidden>
+        <h2 id="previewTitle"></h2>
+        <p id="previewCategory" class="subtitle"></p>
+
+        <h3>Core idea</h3>
+        <p id="previewPrinciple"></p>
+
+        <h3>My understanding</h3>
+        <p id="previewUnderstanding"></p>
+
+        <h3>Example SQL</h3>
+        <pre id="previewExample"></pre>
+
+        <h3>Still confusing</h3>
+        <p id="previewConfusion"></p>
+    </div>
+
+    <div class="card">
+        <h2>My Saved Notes</h2>
+        <p class="subtitle">
+            Every idea you save becomes part of your knowledge library.
+        </p>
+
+        <div id="savedNotesList">
+            <p class="subtitle">Loading your notes...</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const form = document.getElementById("knowledgeForm");
+
+
+    function renderSavedNotes() {
+        const storageKey = "sqld-lab-knowledge-notes";
+        const notes = JSON.parse(
+            localStorage.getItem(storageKey) || "[]"
+        );
+
+        const list = document.getElementById("savedNotesList");
+        list.replaceChildren();
+
+        if (notes.length === 0) {
+            const message = document.createElement("p");
+            message.className = "subtitle";
+            message.textContent = "No notes yet. Create your first note!";
+            list.appendChild(message);
+            return;
+        }
+
+        notes.forEach(function(note) {
+            const card = document.createElement("div");
+            card.style.padding = "16px";
+            card.style.marginTop = "12px";
+            card.style.border = "1px solid #e8dfca";
+            card.style.borderRadius = "12px";
+
+            const title = document.createElement("h3");
+            title.textContent = note.title;
+
+            const category = document.createElement("p");
+            category.className = "subtitle";
+            category.textContent = note.category;
+
+            const date = document.createElement("p");
+            date.className = "subtitle";
+            date.textContent = note.updatedAt
+                ? "Last saved: " + new Date(note.updatedAt).toLocaleString()
+                : "";
+
+            card.append(title, category, date);
+            list.appendChild(card);
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.textContent = "Delete note";
+
+            deleteButton.addEventListener("click", function() {
+                const confirmed = confirm(
+                    "Are you sure you want to delete this note?"
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                const storageKey = "sqld-lab-knowledge-notes";
+                const notes = JSON.parse(
+                    localStorage.getItem(storageKey) || "[]"
+                );
+
+                const targetIndex = notes.findIndex(function(savedNote) {
+                    return savedNote.updatedAt === note.updatedAt
+                        && savedNote.title === note.title;
+                });
+
+                if (targetIndex === -1) {
+                    document.getElementById("notice").textContent =
+                        "Could not find this note. Please refresh the page.";
+                    return;
+                }
+
+                notes.splice(targetIndex, 1);
+                localStorage.setItem(storageKey, JSON.stringify(notes));
+
+                if (editingNoteIndex === targetIndex) {
+                    editingNoteIndex = null;
+                } else if (
+                    editingNoteIndex !== null &&
+                    editingNoteIndex > targetIndex
+                ) {
+                    editingNoteIndex--;
+                }
+
+                renderSavedNotes();
+
+                document.getElementById("notice").textContent =
+                    "Your note has been deleted.";
+            });
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.textContent = "Edit note";
+
+            editButton.addEventListener("click", function() {
+                const storageKey = "sqld-lab-knowledge-notes";
+                const notes = JSON.parse(
+                    localStorage.getItem(storageKey) || "[]"
+                );
+
+                editingNoteIndex = notes.findIndex(function(savedNote) {
+                    return savedNote.updatedAt === note.updatedAt
+                        && savedNote.title === note.title;
+                });
+
+                if (editingNoteIndex === -1) {
+                    document.getElementById("notice").textContent =
+                        "Could not find this note. Please refresh the page.";
+                    return;
+                }
+
+                document.getElementById("title").value = note.title;
+                document.getElementById("category").value = note.category;
+                document.getElementById("principle").value = note.principle;
+                document.getElementById("myUnderstanding").value = note.myUnderstanding;
+                document.getElementById("example").value = note.example;
+                document.getElementById("confusion").value = note.confusion;
+
+                document.getElementById("notice").textContent =
+                    "Editing your note. Make changes in the form, then save.";
+
+                document.getElementById("knowledgeForm").scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            });
+
+            const viewButton = document.createElement("button");
+            viewButton.type = "button";
+            viewButton.textContent = "View note";
+
+            viewButton.addEventListener("click", function() {
+                const details = document.createElement("div");
+                details.style.marginTop = "12px";
+
+                const fields = [
+                    ["Principle", note.principle],
+                    ["My Understanding", note.myUnderstanding],
+                    ["SQL Example", note.example],
+                    ["What Confuses Me", note.confusion]
+                ];
+
+                fields.forEach(function(field) {
+                    const section = document.createElement("div");
+                    section.style.marginTop = "10px";
+
+                    const heading = document.createElement("h4");
+                    heading.textContent = field[0];
+
+                    const content = document.createElement("p");
+                    content.textContent = field[1] || "Not recorded yet.";
+
+                    section.append(heading, content);
+                    details.appendChild(section);
+                });
+
+                const existingDetails = card.querySelector(".note-details");
+
+                if (existingDetails) {
+                    existingDetails.remove();
+                    viewButton.textContent = "View note";
+                } else {
+                    details.className = "note-details";
+                    card.appendChild(details);
+                    viewButton.textContent = "Hide note";
+                }
+            });
+
+            card.append(title, category, date, editButton, viewButton, deleteButton);
+            list.appendChild(card);
+        });
+    }
+
+    renderSavedNotes();
+
+
+    const saveButton = document.getElementById("saveNoteButton");
+
+    let editingNoteIndex = null;
+
+    // The ORDER BY Shelf link arrives as /knowledge?concept=ORDER%20BY.
+    const requestedConcept = new URLSearchParams(location.search).get("concept");
+
+    if (requestedConcept) {
+        document.getElementById("title").value = requestedConcept;
+    }
+
+    saveButton.addEventListener("click", function() {
+        const note = {
+            title: document.getElementById("title").value.trim(),
+            category: document.getElementById("category").value,
+            principle: document.getElementById("principle").value,
+            myUnderstanding: document.getElementById("myUnderstanding").value,
+            example: document.getElementById("example").value,
+            confusion: document.getElementById("confusion").value,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (!note.title) {
+            document.getElementById("notice").textContent =
+                "Please enter a concept name before saving.";
+            return;
+        }
+
+        const storageKey = "sqld-lab-knowledge-notes";
+        const notes = JSON.parse(
+            localStorage.getItem(storageKey) || "[]"
+        );
+
+        if (editingNoteIndex !== null) {
+            notes[editingNoteIndex] = note;
+            editingNoteIndex = null;
+        } else {
+            notes.push(note);
+        }
+
+        localStorage.setItem(storageKey, JSON.stringify(notes));
+
+        renderSavedNotes();
+
+        document.getElementById("notice").textContent =
+            "Your note has been saved!";
+    });
+
+    form.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const title = document.getElementById("title").value.trim();
+
+        if (!title) {
+            document.getElementById("notice").textContent =
+                "Please enter a concept name.";
+            return;
+        }
+
+        document.getElementById("previewTitle").textContent = title;
+
+        document.getElementById("previewCategory").textContent =
+            document.getElementById("category").value;
+
+        document.getElementById("previewPrinciple").textContent =
+            document.getElementById("principle").value || "Not written yet.";
+
+        document.getElementById("previewUnderstanding").textContent =
+            document.getElementById("myUnderstanding").value || "Not written yet.";
+
+        document.getElementById("previewExample").textContent =
+            document.getElementById("example").value || "No SQL example yet.";
+
+        document.getElementById("previewConfusion").textContent =
+            document.getElementById("confusion").value || "Nothing recorded yet.";
+
+        document.getElementById("preview").hidden = false;
+
+        document.getElementById("notice").textContent =
+            "Preview created! Permanent saving is not implemented yet.";
+
+        document.getElementById("preview").scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    });
+</script>
+
+<script src="/js/playground.js"></script>
+</body>
+</html>

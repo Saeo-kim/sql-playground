@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Playground</title>
+    <link rel="stylesheet" href="/css/playground.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--pg-ivory);
+            color: var(--pg-ink);
+            font-family: var(--pg-body);
+        }
+
+        main {
+            overflow-x: clip;
+        }
+
+        .wrap {
+            width: min(1240px, 100%);
+            margin: 0 auto;
+            padding: 0 clamp(16px, 4vw, 48px);
+        }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 3px solid var(--pg-pink-deep);
+            outline-offset: 3px;
+        }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            isolation: isolate;
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 2;
+            padding: clamp(36px, 6vw, 72px) 0 clamp(36px, 5vw, 60px);
+        }
+
+        .welcome {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 14px 0 20px;
+            font-family: var(--pg-display);
+            font-size: clamp(64px, 9.4vw, 136px);
+            font-weight: 900;
+            line-height: 0.94;
+            letter-spacing: -0.045em;
+            text-align: left;
+        }
+
+        h1 span {
+            display: block;
+            width: fit-content;
+        }
+
+        .stroke {
+            background: linear-gradient(176deg, transparent 54%, var(--pg-lime) 54% 90%, transparent 90%);
+        }
+
+        .description {
+            max-width: 460px;
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.65;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px 24px;
+            margin-top: 28px;
+        }
+
+        .cta {
+            display: inline-block;
+            padding: 18px 30px;
+            background: var(--pg-pink);
+            border: 3px solid var(--pg-ink);
+            border-radius: 14px;
+            box-shadow: 6px 6px 0 var(--pg-ink);
+            color: var(--pg-ink);
+            font-size: 20px;
+            font-weight: 900;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .cta:hover {
+            transform: translate(3px, 3px);
+            box-shadow: 3px 3px 0 var(--pg-ink);
+        }
+
+        .jump {
+            color: var(--pg-ink);
+            font-weight: 700;
+            text-underline-offset: 4px;
+            text-decoration-thickness: 2px;
+        }
+
+        /* Abstract drawer-like shapes: decorative, cropped by the page edge */
+        .drawers {
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            /* Reaches the viewport edge even when the content column is capped; main clips the rest */
+            right: calc((100% - 100vw) / 2);
+            bottom: 0;
+            width: 46vw;
+        }
+
+        .orb {
+            position: absolute;
+            top: 6%;
+            right: 12%;
+            width: 54%;
+            aspect-ratio: 1;
+            background: var(--pg-yellow);
+            border-radius: 50%;
+        }
+
+        .dots {
+            position: absolute;
+            top: 2%;
+            left: 6%;
+            width: 34%;
+            height: 34%;
+            background: radial-gradient(var(--pg-ink) 1.6px, transparent 2px) 0 0 / 16px 16px;
+            opacity: 0.32;
+        }
+
+        .slab {
+            position: absolute;
+            right: -8%;
+            height: 25%;
+            border-radius: 26px 0 0 26px;
+            box-shadow: 0 16px 26px rgba(70, 45, 10, 0.16);
+            transform: skewY(-7deg) translateX(var(--pull, 0));
+            transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+
+        /* Half of a pull notch, only on two shapes, so it never reads as a full cabinet */
+        .slab.notched::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: -1px;
+            width: 26px;
+            height: 52px;
+            background: var(--pg-ivory);
+            border-radius: 0 52px 52px 0;
+            transform: translateY(-50%);
+        }
+
+        .slab-select { top: 7%; width: 72%; background: rgba(255, 46, 147, 0.62); }
+        .slab-where { top: 23%; width: 94%; background: rgba(198, 244, 50, 0.66); }
+        .slab-join { top: 40%; width: 66%; background: rgba(255, 138, 31, 0.62); }
+        .slab-order { top: 57%; width: 88%; background: rgba(255, 230, 107, 0.78); }
+        .slab-group { top: 74%; width: 60%; background: rgba(255, 46, 147, 0.38); }
+
+        main:has(.room-select:hover, .room-select:focus-visible) .slab-select,
+        main:has(.room-where:hover, .room-where:focus-visible) .slab-where,
+        main:has(.room-join:hover, .room-join:focus-visible) .slab-join,
+        main:has(.room-order:hover, .room-order:focus-visible) .slab-order,
+        main:has(.room-group:hover, .room-group:focus-visible) .slab-group {
+            --pull: -46px;
+        }
+
+        /* Learning categories */
+        .rooms {
+            position: relative;
+            z-index: 3;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .room {
+            --room: var(--pg-pink);
+            display: block;
+            padding: 16px;
+            background: var(--pg-paper);
+            border: 3px solid var(--pg-ink);
+            border-top-width: 14px;
+            border-top-color: var(--room);
+            border-radius: 14px;
+            color: var(--pg-ink);
+            text-decoration: none;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .room:hover {
+            transform: translateY(-6px);
+            background: var(--room);
+        }
+
+        .room-where { --room: var(--pg-lime); }
+        .room-join { --room: var(--pg-tangerine); }
+        .room-order { --room: var(--pg-yellow); }
+        .room-group { --room: #ff8cc4; }
+
+        .room strong {
+            display: block;
+            font-family: var(--pg-display);
+            font-size: 17px;
+            letter-spacing: -0.02em;
+        }
+
+        .room small {
+            display: block;
+            margin-top: 7px;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        /* Section headings */
+        section.block {
+            margin-top: clamp(56px, 8vw, 96px);
+        }
+
+        h2 {
+            margin: 0 0 8px;
+            font-family: var(--pg-display);
+            font-size: clamp(30px, 4vw, 46px);
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .marked {
+            background: linear-gradient(177deg, transparent 56%, var(--pg-yellow) 56% 92%, transparent 92%);
+        }
+
+        .lede {
+            max-width: 620px;
+            margin: 0 0 24px;
+            line-height: 1.65;
+        }
+
+        /* Query bench */
+        .bench {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            background: var(--pg-paper);
+            border: 3px solid var(--pg-ink);
+            border-radius: 20px;
+            box-shadow: 8px 8px 0 var(--pg-tangerine);
+            overflow: hidden;
+        }
+
+        .bench-left {
+            padding: clamp(18px, 3vw, 30px);
+            background: var(--pg-ink);
+            color: var(--pg-ivory);
+        }
+
+        .bench-right {
+            padding: clamp(18px, 3vw, 30px);
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            padding: 10px 14px;
+            background: transparent;
+            border: 2px solid var(--pg-ivory);
+            border-radius: 999px;
+            color: var(--pg-ivory);
+            font-family: var(--pg-mono);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.12s ease;
+        }
+
+        .chip:hover {
+            transform: translateY(-2px);
+        }
+
+        .chip[aria-pressed="true"] {
+            color: var(--pg-ink);
+            border-color: var(--clause);
+            background: var(--clause);
+        }
+
+        pre {
+            min-height: 150px;
+            margin: 20px 0 0;
+            font-family: var(--pg-mono);
+            font-size: 15px;
+            line-height: 1.75;
+            white-space: pre-wrap;
+        }
+
+        pre b {
+            color: var(--clause, var(--pg-ivory));
+        }
+
+        .clause-where { --clause: var(--pg-lime); }
+        .clause-join { --clause: var(--pg-tangerine); }
+        .clause-group { --clause: #ff8cc4; }
+        .clause-order { --clause: var(--pg-yellow); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--pg-mono);
+            font-size: 15px;
+        }
+
+        th, td {
+            padding: 9px 8px;
+            border-bottom: 2px solid var(--pg-line);
+            text-align: left;
+        }
+
+        th {
+            border-bottom-color: var(--pg-ink);
+        }
+
+        #benchNote {
+            min-height: 48px;
+            margin: 16px 0 0;
+            color: var(--pg-lime);
+            line-height: 1.5;
+        }
+
+        /* Quest, features */
+        .desk {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .mission {
+            grid-column: span 2;
+            position: relative;
+            padding: clamp(22px, 3vw, 34px);
+            background: var(--pg-lime);
+            border: 3px solid var(--pg-ink);
+            border-radius: 20px;
+        }
+
+        .tag {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .mission h3 {
+            margin: 12px 0 8px;
+            font-family: var(--pg-display);
+            font-size: clamp(25px, 3vw, 36px);
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+        }
+
+        .mission p {
+            max-width: 520px;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .start-button {
+            margin-top: 20px;
+            padding: 13px 20px;
+            background: var(--pg-ink);
+            border: 0;
+            border-radius: 12px;
+            color: var(--pg-ivory);
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .feature {
+            display: block;
+            padding: 22px;
+            background: var(--pg-paper);
+            border: 2px solid var(--pg-ink);
+            border-radius: 18px;
+            color: var(--pg-ink);
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0 var(--pg-pink);
+        }
+
+        .feature h3 {
+            margin: 10px 0 6px;
+            font-size: 17px;
+        }
+
+        .feature p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .count {
+            display: block;
+            margin-top: 12px;
+            font-family: var(--pg-display);
+            font-size: 26px;
+        }
+
+        .prison-band {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px 24px;
+            padding: 22px 26px;
+            background: var(--pg-ink);
+            border-radius: 18px;
+            color: var(--pg-ivory);
+            text-decoration: none;
+        }
+
+        .prison-band strong {
+            font-family: var(--pg-display);
+            font-size: 20px;
+        }
+
+        .prison-band span {
+            line-height: 1.5;
+        }
+
+        .prison-band em {
+            color: var(--pg-lime);
+            font-style: normal;
+            font-weight: 700;
+        }
+
+        footer {
+            margin-top: clamp(56px, 8vw, 96px);
+            padding: 24px 16px;
+            border-top: 3px solid var(--pg-ink);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* Responsive layout */
+        @media (max-width: 960px) {
+            .rooms {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .room-group {
+                grid-column: 1 / -1;
+            }
+
+            .bench {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 720px) {
+            h1 {
+                font-size: clamp(44px, 14vw, 96px);
+            }
+
+            .hero-copy {
+                padding-bottom: 16px;
+            }
+
+            .drawers {
+                position: relative;
+                right: auto;
+                bottom: auto;
+                width: auto;
+                height: 170px;
+                margin-right: calc(-1 * clamp(16px, 4vw, 48px));
+                margin-bottom: 18px;
+            }
+
+            .slab {
+                height: 34%;
+            }
+
+            .desk {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .mission {
+                grid-column: auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            main * {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header th:replace="~{fragments/site-header :: siteHeader(true)}"></header>
+
+<main>
+    <section class="wrap hero">
+        <div class="hero-copy">
+            <div class="welcome" id="welcome">YOUR PERSONAL LEARNING SPACE</div>
+
+            <h1><span>SQL</span><span class="stroke">Playground</span></h1>
+
+            <p class="description" id="description">
+                Explore SQL, solve real-world problems, and learn at your own pace.
+            </p>
+
+            <div class="hero-actions">
+                <a class="cta" href="/quests/first" id="startLearning">Start Learning →</a>
+                <a class="jump" href="#bench" id="jumpToBench">or try the query bench</a>
+            </div>
+        </div>
+
+        <div class="drawers" aria-hidden="true">
+            <div class="orb"></div>
+            <div class="dots"></div>
+            <div class="slab slab-select"></div>
+            <div class="slab slab-where notched"></div>
+            <div class="slab slab-join"></div>
+            <div class="slab slab-order notched"></div>
+            <div class="slab slab-group"></div>
+        </div>
+    </section>
+
+    <div class="wrap">
+        <nav class="rooms" aria-label="Learning categories">
+            <a class="room room-select" href="/prison#prisons">
+                <strong>SELECT Room</strong>
+                <small id="roomSelect">Rows, columns, and what a table holds.</small>
+            </a>
+            <a class="room room-where" href="/prison#monsters">
+                <strong>WHERE Filter</strong>
+                <small id="roomWhere">Why NULL slips past an ordinary equals sign.</small>
+            </a>
+            <a class="room room-join" href="/prison#incidents">
+                <strong>JOIN Zone</strong>
+                <small id="roomJoin">Two tables connect. Some rows appear twice.</small>
+            </a>
+            <a class="room room-order" href="/knowledge?concept=ORDER%20BY">
+                <strong>ORDER BY Shelf</strong>
+                <small id="roomOrder">Start your own note on sorting.</small>
+            </a>
+            <a class="room room-group" href="/quests/first">
+                <strong>GROUP BY Corner</strong>
+                <small id="roomGroup">Crack the case of the missing totals.</small>
+            </a>
+        </nav>
+    </div>
+
+    <section class="wrap block" id="bench">
+        <h2><span class="marked" id="benchTitle">The query bench</span></h2>
+        <p class="lede" id="benchLede">
+            Switch a clause on and watch the same five rows change. Nothing can break here.
+        </p>
+
+        <div class="bench">
+            <div class="bench-left">
+                <div class="chips">
+                    <button class="chip clause-join" type="button" data-clause="join" aria-pressed="false">JOIN</button>
+                    <button class="chip clause-where" type="button" data-clause="where" aria-pressed="false">WHERE</button>
+                    <button class="chip clause-group" type="button" data-clause="group" aria-pressed="false">GROUP BY</button>
+                    <button class="chip clause-order" type="button" data-clause="order" aria-pressed="false">ORDER BY</button>
+                </div>
+                <pre id="benchSql"></pre>
+                <p id="benchNote" aria-live="polite"></p>
+            </div>
+
+            <div class="bench-right">
+                <table>
+                    <thead><tr id="benchHead"></tr></thead>
+                    <tbody id="benchBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="wrap block">
+        <div class="desk">
+            <article class="mission">
+                <span class="tag" id="missionTag">TODAY'S QUEST · 01</span>
+                <h3 id="missionTitle">The Missing Sales Report</h3>
+                <p id="missionDescription">
+                    A store owner wants to know how much each customer
+                    has spent. Can you investigate the order data?
+                </p>
+                <button class="start-button" id="startButton" type="button"
+                        onclick="location.href='/quests/first'">
+                    Start your first quest →
+                </button>
+            </article>
+
+            <a class="feature" href="/knowledge">
+                <div>🌱</div>
+                <h3 id="feature3Title">My Growth</h3>
+                <p id="feature3Text">
+                    Track your progress without comparing yourself to others.
+                </p>
+                <span class="count" id="growthCount"></span>
+            </a>
+
+            <a class="feature" href="/quests/first">
+                <div>🔎</div>
+                <h3 id="feature1Title">SQL Detective</h3>
+                <p id="feature1Text">
+                    Solve realistic data mysteries, one mission at a time.
+                </p>
+            </a>
+
+            <a class="feature" href="/knowledge">
+                <div>📝</div>
+                <h3 id="feature2Title">My Brain Notes</h3>
+                <p id="feature2Text">
+                    Record what you understand in your own words.
+                </p>
+            </a>
+
+            <a class="feature" href="/study-canvas">
+                <div>🖍️</div>
+                <h3 id="feature4Title">Study Canvas</h3>
+                <p id="feature4Text">
+                    Read a little. Ask a question. Make something of your own.
+                </p>
+            </a>
+
+            <a class="prison-band" href="/prison">
+                <strong id="prisonTitle">SQL Prison</strong>
+                <span id="prisonText">Side stories: every table has a secret, and every row has a record.</span>
+                <em id="prisonLink">Enter →</em>
+            </a>
+        </div>
+    </section>
+</main>
+
+<footer id="footerText">SQL Playground · Small questions. Lasting knowledge.</footer>
+
+<script src="/js/playground.js"></script>
+<script>
+    let currentLanguage = "en";
+    window.pgLanguage = currentLanguage;
+
+    const text = {
+        en: {
+            navHome: "Home",
+            navKnowledge: "My Knowledge Base",
+            navQuest: "Quest",
+            navTutor: "AI Tutor",
+            navAbout: "About",
+            welcome: "YOUR PERSONAL LEARNING SPACE",
+            description: "Explore SQL, solve real-world problems, and learn at your own pace.",
+            startLearning: "Start Learning →",
+            jumpToBench: "or try the query bench",
+            roomSelect: "Rows, columns, and what a table holds.",
+            roomWhere: "Why NULL slips past an ordinary equals sign.",
+            roomJoin: "Two tables connect. Some rows appear twice.",
+            roomOrder: "Start your own note on sorting.",
+            roomGroup: "Crack the case of the missing totals.",
+            benchTitle: "The query bench",
+            benchLede: "Switch a clause on and watch the same five rows change. Nothing can break here.",
+            missionTag: "TODAY'S QUEST · 01",
+            missionTitle: "The Missing Sales Report",
+            missionDescription: "A store owner wants to know how much each customer has spent. Can you investigate the order data?",
+            startButton: "Start your first quest →",
+            feature1Title: "SQL Detective",
+            feature1Text: "Solve realistic data mysteries, one mission at a time.",
+            feature2Title: "My Brain Notes",
+            feature2Text: "Record what you understand in your own words.",
+            feature3Title: "My Growth",
+            feature3Text: "Track your progress without comparing yourself to others.",
+            feature4Title: "Study Canvas",
+            feature4Text: "Read a little. Ask a question. Make something of your own.",
+            prisonTitle: "SQL Prison",
+            prisonText: "Side stories: every table has a secret, and every row has a record.",
+            prisonLink: "Enter →",
+            footerText: "SQL Playground · Small questions. Lasting knowledge."
+        },
+        ko: {
+            navHome: "홈",
+            navKnowledge: "내 지식 베이스",
+            navQuest: "퀘스트",
+            navTutor: "AI 튜터",
+            navAbout: "소개",
+            welcome: "나만을 위한 SQL 학습 공간",
+            description: "SQL을 탐험하고 실제 문제를 해결하면서 나만의 속도로 배워 봐.",
+            startLearning: "학습 시작하기 →",
+            jumpToBench: "또는 쿼리 실험대 써 보기",
+            roomSelect: "행과 열, 테이블에 담긴 것들.",
+            roomWhere: "NULL이 등호를 빠져나가는 이유.",
+            roomJoin: "두 테이블을 연결했더니 어떤 행이 두 번 나타났어.",
+            roomOrder: "정렬에 대한 나만의 노트를 시작해 봐.",
+            roomGroup: "사라진 합계의 비밀을 풀어 봐.",
+            benchTitle: "쿼리 실험대",
+            benchLede: "절을 켜면 같은 다섯 행이 어떻게 바뀌는지 볼 수 있어. 여기선 뭘 눌러도 괜찮아.",
+            missionTag: "오늘의 퀘스트 · 01",
+            missionTitle: "사라진 매출 보고서",
+            missionDescription: "가게 사장님이 고객별 총 구매 금액을 알고 싶대. 주문 데이터를 조사해서 답을 찾아볼까?",
+            startButton: "첫 번째 미션 시작하기 →",
+            feature1Title: "SQL 탐정",
+            feature1Text: "현실적인 데이터 미스터리를 하나씩 해결해 봐.",
+            feature2Title: "나의 이해 노트",
+            feature2Text: "이해한 내용을 나만의 말로 기록해 봐.",
+            feature3Title: "나의 성장",
+            feature3Text: "다른 사람과 비교하지 않고 나의 성장을 확인해.",
+            feature4Title: "스터디 캔버스",
+            feature4Text: "조금 읽고, 질문하고, 나만의 것을 만들어 봐.",
+            prisonTitle: "SQL 감옥",
+            prisonText: "사이드 스토리: 모든 테이블엔 비밀이 있고, 모든 행엔 기록이 있어.",
+            prisonLink: "입장하기 →",
+            footerText: "SQL Playground · 작은 질문이 오래 남는 지식이 돼."
+        }
+    };
+
+    function toggleLanguage() {
+        currentLanguage = currentLanguage === "en" ? "ko" : "en";
+        window.pgLanguage = currentLanguage;
+
+        document.documentElement.lang = currentLanguage;
+
+        document.getElementById("languageButton").textContent =
+            currentLanguage === "en" ? "한국어" : "English";
+
+        document.getElementById("siteSearch").placeholder =
+            currentLanguage === "en" ? "Search lessons" : "학습 내용 검색";
+
+        const selected = text[currentLanguage];
+
+        Object.keys(selected).forEach(function (id) {
+            document.getElementById(id).innerHTML = selected[id];
+        });
+
+        renderGrowth();
+        renderBench();
+    }
+
+    // My Growth reads the notes saved by the Knowledge Base page.
+    function renderGrowth() {
+        let count = 0;
+
+        try {
+            const notes = JSON.parse(localStorage.getItem("sqld-lab-knowledge-notes") || "[]");
+            count = Array.isArray(notes) ? notes.length : 0;
+        } catch (error) {
+            count = 0;
+        }
+
+        document.getElementById("growthCount").textContent =
+            currentLanguage === "ko"
+                ? "저장한 노트 " + count + "개"
+                : count + (count === 1 ? " note saved" : " notes saved");
+    }
+
+    // Query bench: applies the toggled clauses to sample rows in SQL's logical order.
+    const plays = [
+        { player: "Haru", game: "Slide", score: 30 },
+        { player: "Sora", game: "Swing", score: 50 },
+        { player: "Haru", game: "Swing", score: 20 },
+        { player: "Dami", game: "Slide", score: 70 },
+        { player: "Sora", game: "Seesaw", score: 10 }
+    ];
+    const teams = { Haru: "Red", Sora: "Blue", Dami: "Red" };
+    const clauses = { join: false, where: false, group: false, order: false };
+    let lastChange = null;
+
+    function runBenchQuery() {
+        let rows = plays.map(function (row) {
+            return Object.assign({}, row);
+        });
+
+        if (clauses.join) {
+            rows.forEach(function (row) {
+                row.team = teams[row.player];
+            });
+        }
+
+        if (clauses.where) {
+            rows = rows.filter(function (row) {
+                return row.score >= 30;
+            });
+        }
+
+        const rowsBeforeGroup = rows.length;
+
+        if (clauses.group) {
+            const groups = new Map();
+
+            rows.forEach(function (row) {
+                if (!groups.has(row.player)) {
+                    const group = { player: row.player, total: 0 };
+                    if (clauses.join) {
+                        group.team = row.team;
+                    }
+                    groups.set(row.player, group);
+                }
+                groups.get(row.player).total += row.score;
+            });
+
+            rows = Array.from(groups.values());
+        }
+
+        if (clauses.order) {
+            const key = clauses.group ? "total" : "score";
+            rows.sort(function (a, b) {
+                return b[key] - a[key];
+            });
+        }
+
+        const columns = ["player"];
+        if (clauses.join) {
+            columns.push("team");
+        }
+        if (clauses.group) {
+            columns.push("total");
+        } else {
+            columns.push("game", "score");
+        }
+
+        return { rows: rows, columns: columns, rowsBeforeGroup: rowsBeforeGroup };
+    }
+
+    function benchLines(columns) {
+        const selectList = columns.map(function (column) {
+            return column === "total" ? "SUM(score) AS total" : column;
+        }).join(", ");
+        const lines = [
+            ["", "SELECT", " " + selectList],
+            ["", "FROM", " plays"]
+        ];
+
+        if (clauses.join) {
+            lines.push(["clause-join", "JOIN", " teams ON plays.player = teams.name"]);
+        }
+        if (clauses.where) {
+            lines.push(["clause-where", "WHERE", " score >= 30"]);
+        }
+        if (clauses.group) {
+            lines.push(["clause-group", "GROUP BY", clauses.join ? " player, team" : " player"]);
+        }
+        if (clauses.order) {
+            lines.push(["clause-order", "ORDER BY", clauses.group ? " total DESC" : " score DESC"]);
+        }
+
+        return lines;
+    }
+
+    function benchNote(result) {
+        const ko = currentLanguage === "ko";
+
+        if (!lastChange) {
+            return ko ? "위의 절을 하나 눌러 봐." : "Pick a clause above to begin.";
+        }
+
+        if (!clauses[lastChange]) {
+            return ko ? "절을 뺐어. 결과가 다시 바뀌었지?" : "Clause removed. See what came back?";
+        }
+
+        const notes = {
+            join: ko
+                ? "JOIN이 두 번째 테이블에서 각 플레이어의 팀을 가져왔어."
+                : "JOIN pulled each player's team from a second table.",
+            where: ko
+                ? "WHERE가 5개 행 중 " + result.rowsBeforeGroup + "개만 남겼어."
+                : "WHERE kept " + result.rowsBeforeGroup + " of 5 rows.",
+            group: ko
+                ? "GROUP BY가 " + result.rowsBeforeGroup + "개 행을 플레이어별 " + result.rows.length + "개 행으로 묶었어."
+                : "GROUP BY folded " + result.rowsBeforeGroup + " rows into " + result.rows.length + ", one per player.",
+            order: ko
+                ? "ORDER BY가 가장 높은 점수를 맨 위로 올렸어."
+                : "ORDER BY moved the highest score to the top."
+        };
+
+        return notes[lastChange];
+    }
+
+    function renderBench() {
+        const result = runBenchQuery();
+        const sql = document.getElementById("benchSql");
+        const head = document.getElementById("benchHead");
+        const body = document.getElementById("benchBody");
+        const lines = benchLines(result.columns);
+
+        sql.replaceChildren();
+        lines.forEach(function (line, index) {
+            const row = document.createElement("span");
+            const keyword = document.createElement("b");
+            const isLast = index === lines.length - 1;
+
+            row.className = line[0];
+            keyword.textContent = line[1];
+            row.append(keyword, line[2] + (isLast ? ";" : "\n"));
+            sql.appendChild(row);
+        });
+
+        head.replaceChildren();
+        result.columns.forEach(function (column) {
+            const cell = document.createElement("th");
+            cell.scope = "col";
+            cell.textContent = column;
+            head.appendChild(cell);
+        });
+
+        body.replaceChildren();
+        result.rows.forEach(function (row) {
+            const tableRow = document.createElement("tr");
+            result.columns.forEach(function (column) {
+                const cell = document.createElement("td");
+                cell.textContent = row[column];
+                tableRow.appendChild(cell);
+            });
+            body.appendChild(tableRow);
+        });
+
+        document.getElementById("benchNote").textContent = benchNote(result);
+    }
+
+    document.querySelectorAll(".chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+            const clause = chip.dataset.clause;
+            clauses[clause] = !clauses[clause];
+            lastChange = clause;
+            chip.setAttribute("aria-pressed", String(clauses[clause]));
+            renderBench();
+        });
+    });
+
+    renderGrowth();
+    renderBench();
+</script>
+</body>
+</html>

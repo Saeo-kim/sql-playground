@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Canvas | SQL Playground</title>
+
+    <link rel="stylesheet" href="/css/playground.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #fbf5e6;
+            color: #211c17;
+            font-family: Arial, sans-serif;
+        }
+
+        .page-head {
+            padding: 24px 7%;
+            border-bottom: 1px solid #e8dfca;
+        }
+
+        .page-head h1 {
+            margin: 0 0 8px;
+        }
+
+        .page-head p {
+            margin: 0;
+            color: #6b6358;
+        }
+
+        main {
+            width: min(1100px, 92%);
+            margin: 32px auto;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #e8dfca;
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 19px;
+            margin-top: 0;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d9ceb4;
+            border-radius: 10px;
+            font: inherit;
+            background: #fff;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 12px 17px;
+            border: 0;
+            border-radius: 10px;
+            background: #ff2e93;
+            color: #211c17;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .secondary {
+            background: #ffe66b;
+            color: #211c17;
+        }
+
+        .muted {
+            color: #6b6358;
+            font-size: 14px;
+        }
+
+        .answer, .note {
+            padding: 16px;
+            margin-top: 14px;
+            background: #fff6c4;
+            border-radius: 12px;
+            white-space: pre-wrap;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+<header th:replace="~{fragments/site-header :: siteHeader(false)}"></header>
+<header class="page-head">
+    <h1>Study Canvas ✦</h1>
+    <p>Read a little. Ask a question. Make something of your own.</p>
+</header>
+
+<main>
+    <section class="panel">
+        <h2>01. What are you learning?</h2>
+        <p class="muted">지금 읽고 있는 교과서 문장이나 궁금한 개념을 적어 봐.</p>
+
+        <textarea id="concept"
+                  placeholder="예: INNER JOIN은 조인 조건에 일치하는 행만 반환한다."></textarea>
+
+        <h2 style="margin-top: 24px;">Ask your AI Tutor</h2>
+
+        <input id="question"
+               placeholder="예: 여기서 조인 조건이란 게 뭐지?">
+
+        <div class="actions">
+            <button onclick="showQuestion()">
+                질문 기록하기
+            </button>
+        </div>
+
+        <div id="questionResult" class="answer" hidden></div>
+        <p class="muted">
+            지금은 화면의 기본 구조를 만드는 단계야.
+            실제 AI 연결은 다음 단계에서 진행할 거야.
+        </p>
+    </section>
+
+    <section class="panel">
+        <h2>02. My Canvas</h2>
+        <p class="muted">
+            이해한 내용 중 필요한 부분만 가져오고,
+            내 생각을 자유롭게 덧붙여 봐.
+        </p>
+
+        <textarea id="note"
+                  placeholder="여기에 내가 이해한 내용, 낙서, 새로운 질문을 기록해 봐."></textarea>
+
+        <div class="actions">
+            <button onclick="saveNote()">노트 저장하기</button>
+            <button class="secondary" onclick="addQuestionToNote()">
+                질문을 노트로 가져오기
+            </button>
+        </div>
+
+        <div id="savedNote" class="note" hidden></div>
+    </section>
+
+    <section class="panel">
+        <h2>03. My Experiments</h2>
+        <p class="muted">
+            다음 단계에서 직접 SQL을 수정하고 실행하며
+            결과를 확인하는 실험실로 확장할 거야.
+        </p>
+    </section>
+</main>
+
+<script>
+    function showQuestion() {
+        const concept = document.getElementById("concept").value.trim();
+        const question = document.getElementById("question").value.trim();
+        const result = document.getElementById("questionResult");
+
+        if (!concept || !question) {
+            alert("공부 중인 문장과 궁금한 점을 먼저 입력해 줘.");
+            return;
+        }
+
+        result.hidden = false;
+        result.textContent =
+            "현재 공부 중인 내용:\n" + concept +
+            "\n\n내 질문:\n" + question +
+            "\n\nAI Tutor를 연결하면 이 질문에 맞춤형 답변을 받을 수 있어.";
+    }
+
+    function addQuestionToNote() {
+        const question = document.getElementById("question").value.trim();
+        const note = document.getElementById("note");
+
+        if (!question) {
+            alert("먼저 궁금한 질문을 입력해 줘.");
+            return;
+        }
+
+        note.value += (note.value ? "\n\n" : "") +
+            "내 질문: " + question;
+        note.focus();
+    }
+
+    function saveNote() {
+        const note = document.getElementById("note").value;
+        const savedNote = document.getElementById("savedNote");
+
+        savedNote.hidden = false;
+        savedNote.textContent = note || "아직 작성한 내용이 없어.";
+    }
+</script>
+<script src="/js/playground.js"></script>
+</body>
+</html>
